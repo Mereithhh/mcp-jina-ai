@@ -1,144 +1,162 @@
-# Jina AI MCP Server
-[![smithery badge](https://smithery.ai/badge/jina-ai-mcp-server)](https://smithery.ai/server/jina-ai-mcp)
-[![smithery badge](https://smithery.ai/badge/jina-ai-mcp-server)](https://smithery.ai/server/jina-ai-mcp-server)
+# MCP Jina AI
 
-An MCP server that provides access to Jina AI's powerful web services through Claude. This server implements three main tools:
+MCP (Model Context Protocol) server for Jina AI services.
 
-- Web page reading and content extraction
-- Web search
-- Fact checking/grounding
+## 安装
 
-<a href="https://glama.ai/mcp/servers/c1l6ib2j49"><img width="380" height="200" src="https://glama.ai/mcp/servers/c1l6ib2j49/badge" alt="mcp-jina-ai MCP server" /></a>
-
-## Features
-
-### Tools
-
-#### `read_webpage`
-- Extract content from web pages in a format optimized for LLMs
-- Supports multiple output formats (Default, Markdown, HTML, Text, Screenshot, Pageshot)
-- Options for including links and images
-- Ability to generate alt text for images
-- Cache control options
-
-#### `search_web`
-- Search the web using Jina AI's search API
-- Configurable number of results (default: 5)
-- Support for image retention and alt text generation
-- Multiple return formats (markdown, text, html)
-- Returns structured results with titles, descriptions, and content
-
-#### `fact_check`
-- Fact-check statements using Jina AI's grounding engine
-- Provides factuality scores and supporting evidence 
-- Optional deep-dive mode for more thorough analysis
-- Returns references with key quotes and supportive/contradictory classification
-
-## Setup
-
-### Prerequisites
-
-You'll need a Jina AI API key to use this server. Get one for free at https://jina.ai/
-
-### Installation
-
-There are two ways to use this server:
-
-#### Installing via Smithery
-
-To install Jina AI for Claude Desktop automatically via [Smithery](https://smithery.ai/server/jina-ai-mcp-server):
+### 本地开发安装
 
 ```bash
-npx -y @smithery/cli install jina-ai-mcp-server --client claude
-```
+# 克隆仓库
+git clone https://github.com/yourusername/mcp-jina-ai.git
+cd mcp-jina-ai
 
-#### Option 1: NPX (Recommended)
-Add this configuration to your Claude Desktop config file:
-
-```json
-{
-  "mcpServers": {
-    "jina-ai-mcp-server": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "jina-ai-mcp-server"
-      ],
-      "env": {
-        "JINA_API_KEY": "<YOUR_KEY>"
-      }
-    }
-  }
-}
-```
-
-#### Option 2: Local Installation
-1. Clone the repository
-2. Install dependencies:
-```bash
+# 安装依赖
 npm install
-```
 
-3. Build the server:
-```bash
+# 构建项目
 npm run build
+
+# 运行开发服务器
+npm run dev
 ```
 
-4. Add this configuration to your Claude Desktop config:
-```json
-{
-  "mcpServers": {
-    "jina-ai-mcp-server": {
-      "command": "node",
-      "args": [
-        "/path/to/jina-ai-mcp-server/dist/index.js"
-      ],
-      "env": {
-        "JINA_API_KEY": "<YOUR_KEY>"
-      }
-    }
-  }
-}
-```
+### 全局安装
 
-### Config File Location
-
-On MacOS:
 ```bash
-~/Library/Application Support/Claude/claude_desktop_config.json
+# 使用 npm 全局安装
+npm install -g mcp-jina-ai
+
+# 或者使用 npx 直接运行（推荐）
+npx --yes mcp-jina-ai
 ```
 
-On Windows:
+> 注意：如果使用 `npx` 命令时出现问题，请尝试使用完整的 `--yes` 标志代替 `-y`。
+
+## 使用方法
+
+1. 设置 Jina AI API 密钥：
+
 ```bash
-%APPDATA%/Claude/claude_desktop_config.json
+export JINA_API_KEY=your_jina_api_key
 ```
 
-### Debugging
+2. 运行服务器：
 
-Since MCP servers communicate over stdio, debugging can be challenging. We recommend using the [MCP Inspector](https://github.com/modelcontextprotocol/inspector):
+```bash
+# 如果全局安装
+mcp-jina-ai
+
+# 如果使用 npx
+npx --yes mcp-jina-ai
+
+# 开发模式
+npm run dev
+```
+
+3. 使用 MCP Inspector 进行测试：
 
 ```bash
 npm run inspector
 ```
 
-The Inspector will provide a URL to access debugging tools in your browser.
+# Jina AI MCP 服务器
 
-## API Response Types
+这是一个使用 Model Context Protocol (MCP) 的服务器，提供 Jina AI 的 Web 搜索、网页阅读和事实检查功能。服务器使用 SSE (Server-Sent Events) 协议进行通信。
 
-All tools return structured JSON responses that include:
+## 功能
 
-- Status codes and metadata
-- Formatted content based on the requested output type
-- Usage information (token counts)
-- When applicable: images, links, and additional metadata
+- **Web 搜索**：使用 Jina AI 的搜索 API 搜索网络
+- **网页阅读**：提取网页内容，以优化的格式返回给 LLM
+- **事实检查**：使用 Jina AI 的验证引擎对语句进行事实检查
 
-For detailed schema information, see `schemas.ts`.
+## 先决条件
 
+- Node.js 16+
+- Jina AI API 密钥 (可在 [https://jina.ai/](https://jina.ai/) 获取)
 
-## Running evals
+## RUN
+```bash
+npx -y mcp-jina-ai
+```
 
-The evals package loads an mcp client that then runs the index.ts file, so there is no need to rebuild between tests. You can load environment variables by prefixing the npx command. Full documentation can be found [here](https://www.mcpevals.io/docs).
+## 配置
+
+设置环境变量 `JINA_API_KEY` 为你的 Jina AI API 密钥：
 
 ```bash
-OPENAI_API_KEY=your-key  npx mcp-eval evals.ts index.ts
+export JINA_API_KEY=your-api-key
 ```
+
+## 使用方法
+
+### 启动服务器
+
+```bash
+# 使用 TypeScript 直接运行（开发模式）
+npm run dev
+
+# 或者先构建然后运行
+npm run build
+npm start
+```
+
+服务器将在 http://localhost:3118 上运行。
+
+### 端点
+
+- **SSE 连接**：`GET /mcp`
+- **消息传递**：`POST /messages?sessionId=<session-id>`
+
+### 运行示例客户端
+
+```bash
+npm run client
+```
+
+这将运行一个示例客户端，连接到服务器并演示所有可用工具的使用。
+
+## API 工具
+
+### 1. read_webpage
+
+从网页提取内容，以优化的格式返回给 LLM。
+
+参数：
+- `url`：要读取的网页 URL
+- `with_links`：（可选）是否包含链接摘要
+- `with_images`：（可选）是否包含图片摘要
+- `with_generated_alt`：（可选）是否包含生成的替代文本
+- `no_cache`：（可选）是否禁用缓存
+- `format`：（可选）输出格式
+
+### 2. search_web
+
+使用 Jina AI 的搜索 API 搜索网络。
+
+参数：
+- `query`：搜索查询
+- `count`：返回结果数量
+
+### 3. fact_check
+
+使用 Jina AI 的验证引擎对语句进行事实检查。
+
+参数：
+- `statement`：要检查的语句
+- `deepdive`：（可选）是否进行深度分析
+
+## 错误处理
+
+所有工具都包含完善的错误处理机制。当发生错误时，响应将包含以下格式：
+
+```json
+{
+  "status": "error",
+  "error": "错误信息描述"
+}
+```
+
+## 许可证
+
+[MIT](LICENSE)

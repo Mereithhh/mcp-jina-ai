@@ -44,9 +44,9 @@ export const ReadWebPageSchema = z.object({
 export const SearchWebSchema = z.object({
   query: z.string(),
   count: z.number().optional().default(5),
-  retain_images: z.enum(['none', 'all']).optional().default('none'),
-  with_generated_alt: z.boolean().optional().default(true),
-  return_format: z.enum(['markdown', 'text', 'html']).optional().default('markdown')
+  // retain_images: z.enum(['none', 'all']).optional().default('none'),
+  // with_generated_alt: z.boolean().optional().default(true),
+  // return_format: z.enum(['markdown', 'text', 'html']).optional().default('markdown')
 });
 
 export const SearchResponseSchema = z.object({
