@@ -11,15 +11,17 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import express from 'express';
 import {
   ReadWebPageSchema,
-  ReaderResponseSchema,
   SearchWebSchema,
-  SearchResponseSchema,
   GroundingSchema,
   GroundingResponseSchema,
 } from './schemas.js'
 
 // Get your Jina AI API key for free: https://jina.ai/
 const JINA_API_KEY = process.env.JINA_API_KEY;
+const MAX_CONTENT_LENGTH = Number(process.env.MAX_CONTENT_LENGTH) || 500;
+const MAX_REQUEST_TIMEOUT = Number(process.env.MAX_REQUEST_TIMEOUT) || 5000;
+console.log("MAX_CONTENT_LENGTH", MAX_CONTENT_LENGTH)
+console.log("MAX_REQUEST_TIMEOUT", MAX_REQUEST_TIMEOUT)
 
 if (!JINA_API_KEY) {
   console.error("JINA_API_KEY environment variable is not set. You can get a key at https://jina.ai/");
@@ -39,25 +41,29 @@ async function readWebPage(params: z.infer<typeof ReadWebPageSchema>) {
   const headers: Record<string, string> = {
     'Authorization': `Bearer ${JINA_API_KEY}`,
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
   };
-
-  if (params.with_links) headers['X-With-Links-Summary'] = 'true';
-  if (params.with_images) headers['X-With-Images-Summary'] = 'true';
-  if (params.with_generated_alt) headers['X-With-Generated-Alt'] = 'true';
-  if (params.no_cache) headers['X-No-Cache'] = 'true';
 
   try {
     console.log("读取网页:", params.url);
     
-    const response = await fetch('https://r.jina.ai/', {
+    // 创建一个 Promise 来封装 fetch 请求
+    const fetchPromise = fetch('https://r.jina.ai/', {
       method: 'POST',
       headers,
       body: JSON.stringify({
         url: params.url,
-        options: params.format || 'Default'
       })
     });
+    
+    // 创建一个超时 Promise
+    const timeoutPromise = new Promise<Response>((resolve, _) => {
+      setTimeout(() => {
+        resolve(new Response("请求超时，网页读取失败"));
+      }, MAX_REQUEST_TIMEOUT);
+    });
+    
+    // 竞争两个 Promise
+    const response = await Promise.race([fetchPromise, timeoutPromise]);
 
     if (!response.ok) {
       throw new Error(`Jina AI API error: ${response.statusText}`);
@@ -66,29 +72,15 @@ async function readWebPage(params: z.infer<typeof ReadWebPageSchema>) {
     // 获取响应文本
     const responseText = await response.text();
     console.log("响应文本长度:", responseText.length);
-    
-    try {
-      // 尝试解析为 JSON
-      const data = JSON.parse(responseText);
-      console.log("解析成功");
-      return ReaderResponseSchema.parse(data);
-    } catch (parseError) {
-      console.error("JSON 解析错误:", parseError);
-      
-      // 返回一个格式化的错误响应
-      return {
-        status: "error",
-        error: "无法解析 API 响应",
-        rawResponse: responseText.substring(0, 500) // 返回部分原始响应用于调试
-      };
+    if (responseText.length > MAX_CONTENT_LENGTH) {
+      return responseText.substring(0, MAX_CONTENT_LENGTH) + "...";
     }
+    
+    return responseText;
   } catch(err) {
     console.log("读取网页出错:", err);
     // 返回一个格式化的错误响应
-    return {
-      status: "error",
-      error: err instanceof Error ? err.message : String(err)
-    };
+    return `工具调用出错了：${err instanceof Error ? err.message : String(err) }`
   }
 }
 
@@ -102,19 +94,36 @@ async function searchWeb(params: z.infer<typeof SearchWebSchema>) {
     // 'X-With-Generated-Alt': params.with_generated_alt.toString(),
     // 'X-Return-Format': params.return_format
   };
+  // 让 token 炸裂一下
+  // const genRandomText = (maxNum: number) => {
+  //   const baseText = `abcdefghijklmnopqrstuvwxyz0123456789`;
+  //   return Array.from({ length: maxNum }, () => baseText[Math.floor(Math.random() * baseText.length)]).join('');
+  // }
+  // return genRandomText(100 * 1000)
   try {
     const queryString = encodeURIComponent(params.query);
     console.log("queryString", queryString)
     const url = `https://s.jina.ai/${queryString}?count=${params.count}`;
 
-    const response = await fetch(url, {
+    const fetchPromise = await fetch(url, {
       method: 'GET',
       headers,
     });
 
+    // 创建一个超时 Promise
+    const timeoutPromise = new Promise<Response>((resolve, _) => {
+      setTimeout(() => {
+        resolve(new Response("请求超时，搜索失败"));
+      }, MAX_REQUEST_TIMEOUT);
+    });
+
+    // 竞争两个 Promise
+    const response = await Promise.race([fetchPromise, timeoutPromise]);
+
     if (!response.ok) {
       throw new Error(`Jina AI Search API error: ${response.statusText}`);
     }
+    
 
     // 获取响应文本
     const responseText = await response.text();
@@ -124,17 +133,13 @@ async function searchWeb(params: z.infer<typeof SearchWebSchema>) {
   } catch(err) {
     console.log("出错了", err);
     // 返回一个格式化的错误响应
-    return {
-      status: "error",
-      error: err instanceof Error ? err.message : String(err)
-    };
+    return `工具调用出错了：${err instanceof Error ? err.message : String(err) }`
   }
 }
 
 async function groundStatement(params: z.infer<typeof GroundingSchema>) {
   const headers: Record<string, string> = {
-    'Authorization': `Bearer ${JINA_API_KEY}`,
-    'Accept': 'application/json'
+    'Authorization': `Bearer ${JINA_API_KEY}`
   };
 
   try {
@@ -156,28 +161,11 @@ async function groundStatement(params: z.infer<typeof GroundingSchema>) {
     const responseText = await response.text();
     console.log("响应文本长度:", responseText.length);
     
-    try {
-      // 尝试解析为 JSON
-      const data = JSON.parse(responseText);
-      console.log("解析成功");
-      return GroundingResponseSchema.parse(data);
-    } catch (parseError) {
-      console.error("JSON 解析错误:", parseError);
-      
-      // 返回一个格式化的错误响应
-      return {
-        status: "error",
-        error: "无法解析 API 响应",
-        rawResponse: responseText.substring(0, 500) // 返回部分原始响应用于调试
-      };
-    }
+    return responseText;
   } catch(err) {
     console.log("事实检查出错:", err);
     // 返回一个格式化的错误响应
-    return {
-      status: "error",
-      error: err instanceof Error ? err.message : String(err)
-    };
+    return `工具调用出错了：${err instanceof Error ? err.message : String(err) }`
   }
 }
 
@@ -214,17 +202,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const args = ReadWebPageSchema.parse(request.params.arguments);
         const result = await readWebPage(args);
         
-        // 检查是否有错误响应
-        if (result.status === "error") {
-          return { 
-            content: [{ 
-              type: "text", 
-              text: JSON.stringify(result, null, 2) 
-            }] 
-          };
-        }
         
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return { content: [{ type: "text", text: result }] };
       }
 
       case "search_web": {
@@ -236,18 +215,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "fact_check": {
         const args = GroundingSchema.parse(request.params.arguments);
         const result = await groundStatement(args);
-        
-        // 检查是否有错误响应
-        if (result.status === "error") {
-          return { 
-            content: [{ 
-              type: "text", 
-              text: JSON.stringify(result, null, 2) 
-            }] 
-          };
-        }
-        
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return { content: [{ type: "text", text: result}] };
       }
 
       default:
@@ -302,9 +270,6 @@ async function runServer() {
         console.log(`会话 ${sessionId} 的 SSE 传输已关闭`);
         delete transports[sessionId];
       };
-      
-      // 启动 SSE 传输
-      await transport.start();
       
       // 将传输连接到 MCP 服务器
       await server.connect(transport);

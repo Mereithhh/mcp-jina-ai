@@ -33,12 +33,7 @@ export const ReaderResponseSchema = z.object({
 });
 
 export const ReadWebPageSchema = z.object({
-  url: z.string(),
-  format: z.enum(['Default', 'Markdown', 'HTML', 'Text', 'Screenshot', 'Pageshot']).optional(),
-  with_links: z.boolean().optional(),
-  with_images: z.boolean().optional(),
-  with_generated_alt: z.boolean().optional(),
-  no_cache: z.boolean().optional()
+  url: z.string()
 });
 
 export const SearchWebSchema = z.object({

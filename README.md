@@ -2,6 +2,8 @@
 
 MCP (Model Context Protocol) server for Jina AI services.
 
+不返回 json，直接返回格式化的文本，对 AI 有好一点， sse 协议的。
+
 ## 安装
 
 ### 本地开发安装
