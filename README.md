@@ -10,7 +10,7 @@ MCP (Model Context Protocol) server for Jina AI services.
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/mcp-jina-ai.git
+git clone https://github.com/yourusername/sse-jina-ai.git
 cd mcp-jina-ai
 
 # 安装依赖
@@ -107,7 +107,7 @@ npm start
 
 ### 端点
 
-- **SSE 连接**：`GET /mcp`
+- **SSE 连接**：`GET /sse`
 - **消息传递**：`POST /messages?sessionId=<session-id>`
 
 ### 运行示例客户端

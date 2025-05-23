@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>改进的 3D 米奇妙妙屋</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script>
+    // 组件：点击时旋转 (保持不变)
+    AFRAME.registerComponent('spin-on-click', {
+      schema: { dur: { type: 'number', default: 1000 } },
+      init: function () {
+        this.el.addEventListener('click', () => {
+          const currentRotation = this.el.getAttribute('rotation');
+          const newYRotation = (currentRotation ? currentRotation.y : 0) + 360;
+          this.el.setAttribute('animation', {
+            property: 'rotation',
+            to: `${currentRotation ? currentRotation.x : 0} ${newYRotation} ${currentRotation ? currentRotation.z : 0}`,
+            dur: this.data.dur,
+            easing: 'easeInOutSine',
+            startEvents: 'start-spin'
+          });
+          this.el.emit('start-spin');
+        });
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <a-scene background="color: #ACE5EE" shadow="type: pcfsoft; autoUpdate: true;">
+
+    <a-plane id="ground" position="0 0 -7" rotation="-90 0 0" width="40" height="40" color="#7CB342" shadow
+      receive-shadows></a-plane>
+
+    <a-entity id="mickey-clubhouse" position="0 0 -7">
+
+      <a-entity id="shoe-entrance" position="0 0.9 0">
+        <a-cylinder position="0 0 -0.2" radius="1.8" height="1.8" color="#FFD700" shadow receive-shadows
+          open-ended="true" theta-start="200" theta-length="140" side="double" rotation="0 0 0">
+        </a-cylinder>
+        <a-circle position="0 0.9 -0.2" radius="1.8" color="#FFD700" rotation="-90 0 0" theta-start="200"
+          theta-length="140"></a-circle>
+        <a-cylinder position="0 -0.85 -0.2" radius="1.8" height="0.1" color="#E6BF00" shadow
+          receive-shadows></a-cylinder>
+        <a-sphere position="-0.5 0.2 1.3" radius="0.15" color="#FFFFFF"></a-sphere>
+        <a-sphere position="0.5 0.2 1.3" radius="0.15" color="#FFFFFF"></a-sphere>
+        <a-box position="0 -0.1 1.4" width="1.2" height="0.1" depth="0.2" color="#FFFFFF"></a-box>
+        <a-plane position="0 0.15 0.8" width="1.2" height="1.3" color="#4A3728" material="shader: flat;"></a-plane>
+      </a-entity>
+
+      <a-entity id="main-body" position="0 2.8 1.0"> <a-cylinder radius="2.5" height="3.5" color="#D92B2B" shadow
+          receive-shadows>
+          <a-circle position="-1.5 0.5 1.8" radius="0.45" color="#FFFF8D" material="shader: flat; side:double;"
+            rotation="0 -20 0"></a-circle>
+          <a-circle position="1.5 0.5 1.8" radius="0.45" color="#FFFF8D" material="shader: flat; side:double;"
+            rotation="0 20 0"></a-circle>
+          <a-torus position="0 1.75 0" radius="2.5" radius-tubular="0.15" color="#C02424" rotation="90 0 0"></a-torus>
+        </a-cylinder>
+      </a-entity>
+
+      <a-entity id="head-section" position="0 5.5 1.0"> <a-sphere radius="2" color="#222222" shadow
+          receive-shadows></a-sphere>
+        <a-sphere id="left-ear" class="clickable" position="-2.2 1.2 0" radius="1.3" color="#222222" shadow
+          receive-shadows spin-on-click>
+          <a-entity rotation="0 15 0"></a-entity> </a-sphere>
+        <a-sphere id="right-ear" class="clickable" position="2.2 1.2 0" radius="1.3" color="#222222" shadow
+          receive-shadows spin-on-click>
+          <a-entity rotation="0 -15 0"></a-entity> </a-sphere>
+      </a-entity>
+
+      <a-entity id="slide-section" position="2.4 1.5 1.0"> <a-box position="0 1 0" width="0.8" height="0.3" depth="1"
+          color="#4A90E2" shadow receive-shadows></a-box>
+        <a-box position="0.8 0 -1.2" rotation="10 15 -40" width="0.7" height="0.2" depth="3" color="#4A90E2" shadow
+          receive-shadows></a-box>
+        <a-box position="1.5 -0.8 -2.2" rotation="0 15 0" width="0.8" height="0.2" depth="0.8" color="#4A90E2" shadow
+          receive-shadows></a-box>
+      </a-entity>
+
+    </a-entity>
+
+    <a-sky id="sky" color="#87CEEB"></a-sky>
+
+    <a-entity light="type: ambient; color: #999; intensity: 0.8"></a-entity>
+    <a-entity
+      light="type: directional; color: #FFF; intensity: 0.7; castShadow: true; position: -8 12 10; shadowBias: -0.001; shadowCameraFar: 50; shadowCameraNear: 0.1; shadowCameraFov: 60; shadowMapHeight:2048; shadowMapWidth:2048;"
+      target="#mickey-clubhouse"></a-entity>
+
+    <a-entity id="player" position="0 2 10"> <a-camera look-controls="pointerLockEnabled: false"
+        wasd-controls="fly: false; acceleration: 45">
+        <a-cursor fuse="false" color="lightgray" scale="0.5 0.5 0.5" raycaster="objects: .clickable"></a-cursor>
+      </a-camera>
+    </a-entity>
+
+  </a-scene>
+</body>
+
+</html>

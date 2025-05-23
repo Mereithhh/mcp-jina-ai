@@ -254,8 +254,8 @@ async function runServer() {
   app.use(express.json());
   
   // SSE 端点用于建立流
-  app.get('/mcp', async (req: express.Request, res: express.Response) => {
-    console.log('收到 GET 请求到 /mcp (建立 SSE 流)');
+  app.get('/sse', async (req: express.Request, res: express.Response) => {
+    console.log('收到 GET 请求到 /sse (建立 SSE 流)');
     try {
       // 为客户端创建新的 SSE 传输
       // POST 消息的端点是 '/messages'
@@ -328,7 +328,7 @@ async function runServer() {
         <body>
           <h1>Jina AI MCP Server</h1>
           <p>这是一个运行 MCP (Model Context Protocol) 的服务器，使用 SSE 协议。</p>
-          <p>MCP 连接端点: <code>/mcp</code></p>
+          <p>MCP 连接端点: <code>/sse</code></p>
           <p>消息端点: <code>/messages</code></p>
         </body>
       </html>
